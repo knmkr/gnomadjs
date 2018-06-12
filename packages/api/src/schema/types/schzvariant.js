@@ -20,6 +20,7 @@ const schzVariantType = new GraphQLObjectType({
     },
     chr: { type: GraphQLInt },
     pos: { type: GraphQLInt },
+    xpos: { type: GraphQLInt },
     ref: { type: GraphQLString },
     alt: { type: GraphQLString },
     n_study: {
@@ -32,7 +33,11 @@ const schzVariantType = new GraphQLObjectType({
     },
     p_value: {
       type: GraphQLFloat,
-      description: 'Number of studies with this variant',
+      description: 'p-value',
+    },
+    log_p_value: {
+      type: GraphQLFloat,
+      description: '-Log10 p-value',
     },
     scz_af: {
       type: GraphQLFloat,
@@ -86,6 +91,57 @@ export const lookupSchzVariantsByStartStop = (db, collection, chr, xstart, xstop
     { chr, pos: { '$gte': Number(xstart), '$lte': Number(xstop) } }
   ).toArray()
 
+  export const lookupGwasVariantsInRegion = ({
+    elasticClient,
+    index,
+    xstart,
+    xstop,
+    chrom,
+    numberOfVariants,
+    cutoff,
+  }) => {
+    const fields = []
+
+    return new Promise((resolve, _) => {
+      elasticClient.search({
+        index,
+        type: 'variant',
+        size: numberOfVariants,
+        // _source: fields,
+        body: {
+          query: {
+            bool: {
+              filter: {
+                bool: {
+                  must: [
+                    {
+                      bool: {
+                        must: { range: { start: { gte: start, lte: stop } } },
+                      }
+                    },
+                    {
+                      bool: {
+                        must: { term: { chrom } },
+                      }
+                    }
+                  ],
+                  should: [
+                    { range: { log_p_value: cutoff } }
+                  ],
+                },
+              },
+            },
+          },
+          sort: [{ xpos: { order: 'asc' } }],
+        },
+      }).then((response) => {
+        resolve(response.hits.hits.map((v) => {
+          const elastic_variant = v._source
+          return (elastic_variant)
+        }))
+      })
+    })
+  }
 
 export const schzVariantTypeExome = new GraphQLObjectType({
   name: 'schzVariantExome',

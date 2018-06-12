@@ -104,7 +104,7 @@ print-keytable-schema:
 171214-get-files:
 	gsutil -m cp -r gs://schizophrenia/browser/2017-12-14_release-v1-browser-merged-variant-table.kt gs://schizophrenia-browser/171214/ \
 	gsutil -m cp -r gs://schizophrenia/browser/2017-12-13-schema-single-gene-burden-results.kt gs://schizophrenia-browser/171214/
-	gsutil -m cp -r gs://schizophrenia/browser/2017-12-14_release-v1-browser-merged-variant-table-by-analysis-group.kt gs://schizophrenia-browser/171214/
+	gsutil -m cp -r gs://schizophrenia/browser/2017-12-14_release-v1-browser-merged-variant-table-by-analysis-group.kt gs://schiz>ophrenia-browser/171214/
 
 171214-load-data:
 	../../../hail-db-utils/submit_hail_v0.1.py \
@@ -117,3 +117,15 @@ print-keytable-schema:
 	--project $(GCLOUD_PROJECT) \
 	--cluster no-vep \
 	load_schizophrenia_data_180512.py
+
+180610-gwas-variants:
+		../../../hail-db-utils/submit.py \
+		--project $(GCLOUD_PROJECT) \
+		--cluster $(DATAPROC_CLUSTER_NAME) \
+		export_gwas_variants_hail_180610.py \
+		--host 10.4.0.13 \
+		--port 9200 \
+		--block-size 500 \
+		--num-shards 2 \
+		--file gs://schizophrenia-browser/gwas/180608/daner_combined_refmt_change_headers_new.csv \
+		--index schizophrenia_gwas_snps_180610
