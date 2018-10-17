@@ -1,13 +1,14 @@
 import PropTypes from 'prop-types'
-import queryString from 'query-string'
 import React from 'react'
 import styled from 'styled-components'
 
-import { Loading, Page, SectionHeading } from '@broad/ui'
+import { Page, SectionHeading } from '@broad/ui'
 
 import GnomadPageHeading from '../GnomadPageHeading'
 import Link from '../Link'
+import StatusMessage from '../StatusMessage'
 import { ReferenceList } from './ReferenceList'
+import GnomadAgeDistribution from './GnomadAgeDistribution'
 import { GnomadPopulationsTable } from './GnomadPopulationsTable'
 import { GnomadGenotypeQualityMetrics } from './qualityMetrics/GnomadGenotypeQualityMetrics'
 import { GnomadSiteQualityMetrics } from './qualityMetrics/GnomadSiteQualityMetrics'
@@ -17,6 +18,7 @@ import { VariantDetailsQuery } from './VariantDetailsQuery'
 import { GnomadVariantOccurrenceTable } from './VariantOccurrenceTable'
 
 const Section = styled.section`
+  width: 100%;
   margin-bottom: 2em;
 `
 
@@ -50,15 +52,15 @@ const GnomadVariantPage = ({ datasetId, variantId }) => (
     <VariantDetailsQuery datasetId={datasetId} variantId={variantId}>
       {({ data, error, loading }) => {
         if (loading) {
-          return <Loading>Loading...</Loading>
+          return <StatusMessage>Loading variant...</StatusMessage>
         }
 
         if (error) {
-          return <Loading>Error</Loading>
+          return <StatusMessage>Unable to load variant</StatusMessage>
         }
 
         if (!data.variant) {
-          return <Loading>Variant not found</Loading>
+          return <StatusMessage>Variant not found</StatusMessage>
         }
 
         const variant = data.variant
@@ -91,7 +93,7 @@ const GnomadVariantPage = ({ datasetId, variantId }) => (
               <SectionHeading>References</SectionHeading>
               <ReferenceList variant={variant} />
             </ResponsiveSection>
-            <ResponsiveSection>
+            <Section>
               <SectionHeading>Annotations</SectionHeading>
               <p>
                 This variant falls on {numTranscripts} transcript(s) in {numGenes} gene(s).
@@ -99,7 +101,7 @@ const GnomadVariantPage = ({ datasetId, variantId }) => (
               <TranscriptConsequenceList
                 sortedTranscriptConsequences={variant.sortedTranscriptConsequences}
               />
-            </ResponsiveSection>
+            </Section>
             <ResponsiveSection>
               <SectionHeading>Population Frequencies</SectionHeading>
               <GnomadPopulationsTable
@@ -107,6 +109,10 @@ const GnomadVariantPage = ({ datasetId, variantId }) => (
                 genomePopulations={variant.genome ? variant.genome.populations : []}
                 showHemizygotes={variant.chrom === 'X' || variant.chrom === 'Y'}
               />
+            </ResponsiveSection>
+            <ResponsiveSection>
+              <SectionHeading>Age Distribution</SectionHeading>
+              <GnomadAgeDistribution variant={variant} />
             </ResponsiveSection>
             <ResponsiveSection>
               <SectionHeading>Genotype Quality Metrics</SectionHeading>
